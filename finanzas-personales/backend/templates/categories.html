@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Categorías — Finanzas{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Categorías</h1>
+  <button onclick="document.getElementById('cat-form').classList.toggle('hidden')"
+          class="bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700">
+    + Nueva categoría
+  </button>
+</div>
+
+<!-- Add category form -->
+<div id="cat-form" class="hidden bg-white rounded-xl border border-gray-200 p-5 mb-6">
+  <h2 class="font-semibold text-gray-800 mb-4">Nueva categoría</h2>
+  <form hx-post="/partials/categories"
+        hx-target="#cat-grid"
+        hx-swap="afterbegin"
+        hx-on::after-request="this.reset(); document.getElementById('cat-form').classList.add('hidden')"
+        class="grid grid-cols-4 gap-4 items-end">
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">Nombre</label>
+      <input type="text" name="name" required placeholder="Ej. Gimnasio"
+             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">Icono (emoji)</label>
+      <input type="text" name="icon" value="📦" maxlength="4"
+             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
+      <select name="type"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <option value="expense">Gasto</option>
+        <option value="income">Ingreso</option>
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">Color</label>
+      <input type="color" name="color" value="#6366f1"
+             class="h-9 w-full border border-gray-300 rounded-lg cursor-pointer" />
+    </div>
+    <div class="col-span-4 flex gap-3 justify-end">
+      <button type="button" onclick="document.getElementById('cat-form').classList.add('hidden')"
+              class="text-sm text-gray-500 hover:text-gray-700 px-4 py-2">Cancelar</button>
+      <button type="submit"
+              class="bg-indigo-600 text-white text-sm font-medium px-5 py-2 rounded-lg hover:bg-indigo-700">
+        Guardar
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Incomes -->
+<h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Ingresos</h2>
+<div id="cat-grid" class="grid grid-cols-3 gap-3 mb-8">
+  {% for cat in categories if cat.type == 'income' %}
+    {% include "partials/category_card.html" %}
+  {% endfor %}
+</div>
+
+<!-- Expenses -->
+<h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Gastos</h2>
+<div class="grid grid-cols-3 gap-3">
+  {% for cat in categories if cat.type == 'expense' %}
+    {% include "partials/category_card.html" %}
+  {% endfor %}
+</div>
+{% endblock %}

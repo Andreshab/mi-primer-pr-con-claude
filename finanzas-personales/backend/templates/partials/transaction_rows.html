@@ -1,0 +1,9 @@
+{% for tx in transactions %}
+{% include "partials/transaction_row.html" %}
+{% else %}
+<tr>
+  <td colspan="5" class="px-4 py-10 text-center text-gray-400 text-sm">
+    Sin transacciones en este período
+  </td>
+</tr>
+{% endfor %}

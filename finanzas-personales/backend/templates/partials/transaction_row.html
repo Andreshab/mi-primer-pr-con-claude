@@ -1,0 +1,23 @@
+<tr id="tx-{{ tx.id }}" class="hover:bg-gray-50">
+  <td class="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">{{ tx.date }}</td>
+  <td class="px-4 py-3">
+    <span class="inline-flex items-center gap-1.5 text-sm">
+      <span>{{ tx.categories.icon }}</span>
+      <span class="text-gray-700">{{ tx.categories.name }}</span>
+    </span>
+  </td>
+  <td class="px-4 py-3 text-sm text-gray-500 max-w-xs truncate">{{ tx.description or '—' }}</td>
+  <td class="px-4 py-3 text-sm font-semibold text-right whitespace-nowrap
+             {{ 'text-green-600' if tx.type == 'income' else 'text-rose-600' }}">
+    {{ '+' if tx.type == 'income' else '-' }}{{ settings.currency_symbol }}{{ "{:,.2f}".format(tx.amount | float) }}
+  </td>
+  <td class="px-4 py-3 text-right">
+    <button hx-delete="/partials/transactions/{{ tx.id }}"
+            hx-target="#tx-{{ tx.id }}"
+            hx-swap="outerHTML"
+            hx-confirm="¿Eliminar esta transacción?"
+            class="text-xs text-gray-400 hover:text-rose-600 transition-colors">
+      Eliminar
+    </button>
+  </td>
+</tr>
