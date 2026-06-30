@@ -8,4 +8,13 @@ Este proyecto fue creado como primer ejercicio de flujo Git + GitHub usando Clau
 
 ## Uso
 
-Próximamente.
+Clona el repositorio y explora los archivos:
+
+```bash
+git clone https://github.com/Andreshab/mi-primer-pr-con-claude.git
+cd mi-primer-pr-con-claude
+```
+
+## Contribuir
+
+Las contribuciones son bienvenidas. Abre un issue o un pull request.
