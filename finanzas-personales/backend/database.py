@@ -1,10 +1,12 @@
 import os
-import truststore
+import sys
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
-# Use Windows certificate store to fix SSL on corporate/Windows environments
-truststore.inject_into_ssl()
+# Windows-only: fix SSL certificate verification with corporate/system CA store
+if sys.platform == "win32":
+    import truststore
+    truststore.inject_into_ssl()
 
 load_dotenv()
 
