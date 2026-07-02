@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Configuración — Finanzas{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold text-gray-900 mb-6">Configuración</h1>
+
+<div class="bg-white rounded-xl border border-gray-200 p-6 max-w-md">
+  <h2 class="font-semibold text-gray-800 mb-4">Divisa</h2>
+  <form hx-post="/partials/settings"
+        hx-target="#settings-result"
+        hx-swap="innerHTML"
+        class="space-y-4">
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">Código de divisa</label>
+      <input type="text" name="currency" value="{{ settings.currency }}" maxlength="10" required
+             placeholder="MXN, USD, EUR..."
+             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">Símbolo</label>
+      <input type="text" name="currency_symbol" value="{{ settings.currency_symbol }}" maxlength="5" required
+             placeholder="$, €, £..."
+             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">Locale</label>
+      <input type="text" name="currency_locale" value="{{ settings.currency_locale }}" maxlength="10" required
+             placeholder="es-MX, en-US, de-DE..."
+             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+    <div class="flex items-center justify-between pt-2">
+      <div id="settings-result"></div>
+      <button type="submit"
+              class="bg-indigo-600 text-white text-sm font-medium px-5 py-2 rounded-lg hover:bg-indigo-700">
+        Guardar
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

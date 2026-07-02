@@ -1,0 +1,40 @@
+<!-- Stat cards -->
+<div class="grid grid-cols-3 gap-4 mb-8">
+  <div class="bg-white rounded-xl border border-gray-200 p-5">
+    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Ingresos</p>
+    <p class="text-2xl font-bold text-green-600">{{ settings.currency_symbol }}{{ "{:,.2f}".format(summary.income) }}</p>
+    <p class="text-xs text-gray-400 mt-1">{{ summary.transaction_count }} transacciones</p>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-200 p-5">
+    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Gastos</p>
+    <p class="text-2xl font-bold text-rose-600">{{ settings.currency_symbol }}{{ "{:,.2f}".format(summary.expense) }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-200 p-5">
+    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Balance</p>
+    <p class="text-2xl font-bold {{ 'text-green-600' if summary.balance >= 0 else 'text-rose-600' }}">
+      {{ settings.currency_symbol }}{{ "{:,.2f}".format(summary.balance) }}
+    </p>
+  </div>
+</div>
+
+<!-- Recent transactions -->
+{% if recent %}
+<ul class="divide-y divide-gray-100">
+  {% for tx in recent %}
+  <li class="flex items-center justify-between px-5 py-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <span class="text-lg shrink-0">{{ tx.categories.icon }}</span>
+      <div class="min-w-0">
+        <p class="text-sm font-medium text-gray-800 truncate">{{ tx.description or tx.categories.name }}</p>
+        <p class="text-xs text-gray-400">{{ tx.date }}</p>
+      </div>
+    </div>
+    <span class="text-sm font-semibold shrink-0 ml-4 {{ 'text-green-600' if tx.type == 'income' else 'text-rose-600' }}">
+      {{ '+' if tx.type == 'income' else '-' }}{{ settings.currency_symbol }}{{ "{:,.2f}".format(tx.amount | float) }}
+    </span>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="px-5 py-8 text-center text-gray-400 text-sm">Sin transacciones este mes</p>
+{% endif %}

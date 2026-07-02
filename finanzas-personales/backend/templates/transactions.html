@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Transacciones — Finanzas{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Transacciones</h1>
+  <button onclick="document.getElementById('tx-form').classList.toggle('hidden')"
+          class="bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700">
+    + Nueva transacción
+  </button>
+</div>
+
+<!-- Add transaction form -->
+<div id="tx-form" class="hidden bg-white rounded-xl border border-gray-200 p-5 mb-6">
+  <h2 class="font-semibold text-gray-800 mb-4">Nueva transacción</h2>
+  <form hx-post="/partials/transactions"
+        hx-target="#tx-body"
+        hx-swap="afterbegin"
+        hx-on::after-request="this.reset(); document.getElementById('tx-form').classList.add('hidden')"
+        class="grid grid-cols-2 gap-4">
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
+      <select name="type" onchange="filterCategories(this.value)"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <option value="expense">Gasto</option>
+        <option value="income">Ingreso</option>
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">Monto</label>
+      <input type="number" name="amount" step="0.01" min="0.01" required
+             placeholder="0.00"
+             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">Categoría</label>
+      <select name="category_id" id="cat-select"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        {% for cat in categories %}
+        <option value="{{ cat.id }}" data-type="{{ cat.type }}">{{ cat.icon }} {{ cat.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">Fecha</label>
+      <input type="date" name="tx_date" required
+             value="{{ ''|default(none) }}"
+             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+    <div class="col-span-2">
+      <label class="block text-xs font-medium text-gray-600 mb-1">Descripción (opcional)</label>
+      <input type="text" name="description" placeholder="Ej. Supermercado, pago de nómina..."
+             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+    <div class="col-span-2 flex gap-3 justify-end">
+      <button type="button" onclick="document.getElementById('tx-form').classList.add('hidden')"
+              class="text-sm text-gray-500 hover:text-gray-700 px-4 py-2">Cancelar</button>
+      <button type="submit"
+              class="bg-indigo-600 text-white text-sm font-medium px-5 py-2 rounded-lg hover:bg-indigo-700">
+        Guardar
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Filters -->
+<div class="bg-white rounded-xl border border-gray-200 mb-4">
+  <div class="flex items-center gap-4 px-4 py-3">
+    <input type="month" value="{{ month }}"
+           hx-get="/partials/transactions"
+           hx-target="#tx-body"
+           hx-swap="innerHTML"
+           hx-trigger="change"
+           name="month"
+           class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    <select hx-get="/partials/transactions"
+            hx-target="#tx-body"
+            hx-swap="innerHTML"
+            hx-trigger="change"
+            hx-include="[name='month']"
+            name="type"
+            class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      <option value="">Todos los tipos</option>
+      <option value="income">Ingresos</option>
+      <option value="expense">Gastos</option>
+    </select>
+  </div>
+</div>
+
+<!-- Transactions table -->
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+  <table class="min-w-full">
+    <thead class="bg-gray-50 border-b border-gray-200">
+      <tr>
+        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Fecha</th>
+        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Categoría</th>
+        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Descripción</th>
+        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">Monto</th>
+        <th class="px-4 py-3"></th>
+      </tr>
+    </thead>
+    <tbody id="tx-body" class="divide-y divide-gray-100">
+      {% include "partials/transaction_rows.html" %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+  // Set today as default date for new transaction form
+  document.querySelector('[name="tx_date"]').value = new Date().toISOString().split('T')[0];
+
+  // Filter category select by transaction type
+  function filterCategories(type) {
+    const sel = document.getElementById('cat-select');
+    Array.from(sel.options).forEach(opt => {
+      opt.hidden = opt.dataset.type !== type;
+    });
+    // Select first visible option
+    const first = Array.from(sel.options).find(o => !o.hidden);
+    if (first) sel.value = first.value;
+  }
+  filterCategories('expense');
+</script>
+{% endblock %}

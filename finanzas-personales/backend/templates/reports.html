@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Reportes — Finanzas{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Reportes</h1>
+  <input type="month" value="{{ month }}"
+         hx-get="/reports"
+         hx-target="body"
+         hx-push-url="true"
+         hx-trigger="change"
+         name="month"
+         class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+</div>
+
+<!-- Summary cards -->
+<div class="grid grid-cols-3 gap-4 mb-8">
+  <div class="bg-white rounded-xl border border-gray-200 p-5">
+    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Ingresos</p>
+    <p class="text-2xl font-bold text-green-600">{{ settings.currency_symbol }}{{ "{:,.2f}".format(summary.income) }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-200 p-5">
+    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Gastos</p>
+    <p class="text-2xl font-bold text-rose-600">{{ settings.currency_symbol }}{{ "{:,.2f}".format(summary.expense) }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-200 p-5">
+    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Balance</p>
+    <p class="text-2xl font-bold {{ 'text-green-600' if summary.balance >= 0 else 'text-rose-600' }}">
+      {{ settings.currency_symbol }}{{ "{:,.2f}".format(summary.balance) }}
+    </p>
+  </div>
+</div>
+
+<!-- Charts -->
+<div class="grid grid-cols-2 gap-6 mb-6">
+  <div class="bg-white rounded-xl border border-gray-200 p-5">
+    <h2 class="font-semibold text-gray-800 mb-4">Gastos por categoría</h2>
+    <div id="pie-chart" style="height:280px"></div>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-200 p-5">
+    <h2 class="font-semibold text-gray-800 mb-4">Tendencia mensual</h2>
+    <div id="bar-chart" style="height:280px"></div>
+  </div>
+</div>
+
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script>
+const pie = {{ pie_data | safe }};
+const trend = {{ trend_data | safe }};
+
+const layout = { margin: { t: 10, b: 40, l: 40, r: 10 }, paper_bgcolor: 'transparent', plot_bgcolor: 'transparent', font: { family: 'inherit', size: 12 } };
+const config = { displayModeBar: false, responsive: true };
+
+if (pie.labels.length > 0) {
+  Plotly.newPlot('pie-chart', [{
+    type: 'pie',
+    labels: pie.labels,
+    values: pie.values,
+    marker: { colors: pie.colors },
+    textinfo: 'percent',
+    hovertemplate: '<b>%{label}</b><br>%{value:,.2f}<extra></extra>',
+  }], { ...layout, showlegend: true, legend: { orientation: 'v', x: 1, y: 0.5 } }, config);
+} else {
+  document.getElementById('pie-chart').innerHTML = '<p class="text-center text-gray-400 text-sm pt-24">Sin gastos este mes</p>';
+}
+
+Plotly.newPlot('bar-chart', [
+  { name: 'Ingresos', x: trend.months, y: trend.income, type: 'bar', marker: { color: '#22c55e' } },
+  { name: 'Gastos',   x: trend.months, y: trend.expense, type: 'bar', marker: { color: '#f43f5e' } },
+], { ...layout, barmode: 'group', legend: { orientation: 'h', y: -0.2 } }, config);
+</script>
+{% endblock %}

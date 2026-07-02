@@ -1,0 +1,58 @@
+<div id="goal-{{ goal.id }}" class="bg-white rounded-xl border border-gray-200 p-5">
+  <div class="flex items-start justify-between mb-3">
+    <div>
+      <h3 class="font-semibold text-gray-800">{{ goal.name }}</h3>
+      {% if goal.deadline %}
+      <p class="text-xs text-gray-400 mt-0.5">Fecha límite: {{ goal.deadline }}</p>
+      {% endif %}
+    </div>
+    <span class="text-xs px-2 py-1 rounded-full font-medium
+                 {{ 'bg-green-100 text-green-700' if goal.status == 'completed'
+                    else 'bg-indigo-100 text-indigo-700' if goal.status == 'active'
+                    else 'bg-gray-100 text-gray-600' }}">
+      {{ {'active': 'Activa', 'completed': 'Completada', 'cancelled': 'Cancelada'}[goal.status] }}
+    </span>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="mb-3">
+    <div class="flex justify-between text-sm mb-1">
+      <span class="text-gray-600 font-medium">
+        {{ settings.currency_symbol }}{{ "{:,.2f}".format(goal.current_amount | float) }}
+      </span>
+      <span class="text-gray-400">
+        {{ settings.currency_symbol }}{{ "{:,.2f}".format(goal.target_amount | float) }}
+        · {{ goal.progress_pct }}%
+      </span>
+    </div>
+    <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+      <div class="h-full rounded-full transition-all
+                  {{ 'bg-green-500' if goal.status == 'completed' else 'bg-indigo-500' }}"
+           style="width: {{ [goal.progress_pct | float, 100] | min }}%"></div>
+    </div>
+  </div>
+
+  <!-- Contribute form (only active goals) -->
+  {% if goal.status == 'active' %}
+  <details class="mt-3">
+    <summary class="text-xs text-indigo-600 font-medium cursor-pointer hover:text-indigo-800 select-none">
+      + Agregar aporte
+    </summary>
+    <form hx-post="/partials/goals/{{ goal.id }}/contribute"
+          hx-target="#goal-{{ goal.id }}"
+          hx-swap="outerHTML"
+          hx-on::after-request="this.reset()"
+          class="grid grid-cols-3 gap-2 mt-3">
+      <input type="number" name="amount" step="0.01" min="0.01" required
+             placeholder="Monto"
+             class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      <input type="date" name="contrib_date" required
+             class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      <button type="submit"
+              class="bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
+        Aportar
+      </button>
+    </form>
+  </details>
+  {% endif %}
+</div>
