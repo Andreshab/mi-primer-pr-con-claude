@@ -10,14 +10,14 @@ if sys.platform == "win32":
 
 load_dotenv()
 
-_client: Client | None = None
+_url: str | None = None
+_key: str | None = None
 
 
 def get_client() -> Client:
-    global _client
-    if _client is None:
-        url = os.environ["SUPABASE_URL"]
+    global _url, _key
+    if _url is None:
+        _url = os.environ["SUPABASE_URL"]
         # service_role bypasses RLS — safe for server-side use only
-        key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
-        _client = create_client(url, key)
-    return _client
+        _key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
+    return create_client(_url, _key)
