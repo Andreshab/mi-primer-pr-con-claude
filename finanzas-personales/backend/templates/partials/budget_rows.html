@@ -1,0 +1,9 @@
+{% if budget_items %}
+  {% for item in budget_items %}
+    {% include "partials/budget_row.html" %}
+  {% endfor %}
+{% else %}
+  <p class="px-5 py-10 text-center text-gray-400 text-sm">
+    No hay categorías de gasto. Crea una en <a href="/categories" class="text-indigo-600 hover:underline">Categorías</a>.
+  </p>
+{% endif %}

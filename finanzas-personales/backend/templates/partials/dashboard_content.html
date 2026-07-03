@@ -1,0 +1,110 @@
+<!-- Stat cards -->
+<div class="grid grid-cols-3 gap-4 mb-6">
+  <div class="bg-white rounded-xl border border-gray-200 p-5">
+    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Ingresos</p>
+    <p class="text-2xl font-bold text-green-600">{{ settings.currency_symbol }}{{ "{:,.2f}".format(summary.income) }}</p>
+    <p class="text-xs text-gray-400 mt-1">{{ summary.transaction_count }} transacciones</p>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-200 p-5">
+    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Gastos</p>
+    <p class="text-2xl font-bold text-rose-600">{{ settings.currency_symbol }}{{ "{:,.2f}".format(summary.expense) }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-200 p-5">
+    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Balance</p>
+    <p class="text-2xl font-bold {{ 'text-green-600' if summary.balance >= 0 else 'text-rose-600' }}">
+      {{ settings.currency_symbol }}{{ "{:,.2f}".format(summary.balance) }}
+    </p>
+  </div>
+</div>
+
+<!-- Budget of the month -->
+{% if budget and budget.total_budget %}
+{% set bpct = budget.pct %}
+{% set bbar = 'bg-green-500' if bpct < 80 else 'bg-amber-500' if bpct <= 100 else 'bg-rose-500' %}
+<div class="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="font-semibold text-gray-800">Presupuesto del mes</h2>
+    <a href="/budgets" class="text-indigo-600 text-sm hover:underline">Administrar →</a>
+  </div>
+  <div class="flex justify-between text-sm mb-1">
+    <span class="text-gray-600 font-medium">
+      {{ settings.currency_symbol }}{{ "{:,.2f}".format(budget.total_spent) }}
+      de {{ settings.currency_symbol }}{{ "{:,.2f}".format(budget.total_budget) }}
+    </span>
+    <span class="{{ 'text-rose-600 font-semibold' if bpct > 100 else 'text-gray-400' }}">{{ bpct }}%</span>
+  </div>
+  <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+    <div class="h-full rounded-full transition-all {{ bbar }}"
+         style="width: {{ [bpct | float, 100] | min }}%"></div>
+  </div>
+  {% if budget.over %}
+  <p class="text-xs text-rose-600 mt-2 font-medium">
+    Excedido:
+    {% for o in budget.over %}{{ o.category_icon }} {{ o.category_name }}{{ ", " if not loop.last }}{% endfor %}
+  </p>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- Recent transactions + Goals side by side -->
+<div class="grid grid-cols-5 gap-6">
+
+  <!-- Recent transactions (3/5) -->
+  <div class="col-span-3 bg-white rounded-xl border border-gray-200">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+      <h2 class="font-semibold text-gray-800">Últimas transacciones</h2>
+      <a href="/transactions" class="text-indigo-600 text-sm hover:underline">Ver todas →</a>
+    </div>
+    {% if recent %}
+    <ul class="divide-y divide-gray-100">
+      {% for tx in recent %}
+      <li class="flex items-center justify-between px-5 py-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="text-lg shrink-0">{{ tx.categories.icon }}</span>
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-gray-800 truncate">{{ tx.description or tx.categories.name }}</p>
+            <p class="text-xs text-gray-400">{{ tx.date }}</p>
+          </div>
+        </div>
+        <span class="text-sm font-semibold shrink-0 ml-4 {{ 'text-green-600' if tx.type == 'income' else 'text-rose-600' }}">
+          {{ '+' if tx.type == 'income' else '-' }}{{ settings.currency_symbol }}{{ "{:,.2f}".format(tx.amount | float) }}
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="px-5 py-8 text-center text-gray-400 text-sm">Sin transacciones este mes</p>
+    {% endif %}
+  </div>
+
+  <!-- Goals (2/5) -->
+  <div class="col-span-2 bg-white rounded-xl border border-gray-200">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+      <h2 class="font-semibold text-gray-800">Metas activas</h2>
+      <a href="/goals" class="text-indigo-600 text-sm hover:underline">Ver todas →</a>
+    </div>
+    {% if goals %}
+    <ul class="divide-y divide-gray-100 px-5">
+      {% for g in goals %}
+      <li class="py-3">
+        <div class="flex justify-between text-sm mb-1">
+          <span class="font-medium text-gray-800 truncate">{{ g.name }}</span>
+          <span class="text-gray-500 shrink-0 ml-2">{{ g.progress_pct }}%</span>
+        </div>
+        <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+          <div class="h-full bg-indigo-500 rounded-full transition-all"
+               style="width: {{ [g.progress_pct | float, 100] | min }}%"></div>
+        </div>
+        <p class="text-xs text-gray-400 mt-1">
+          {{ settings.currency_symbol }}{{ "{:,.0f}".format(g.current_amount | float) }}
+          / {{ settings.currency_symbol }}{{ "{:,.0f}".format(g.target_amount | float) }}
+        </p>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="px-5 py-8 text-center text-gray-400 text-sm">Sin metas activas</p>
+    {% endif %}
+  </div>
+
+</div>

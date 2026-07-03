@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from database import get_client
-from routers import categories, transactions, goals, reports, settings, pages
+from routers import budgets, categories, transactions, goals, reports, settings, pages
 
 app = FastAPI(title="Finanzas Personales")
 
@@ -13,6 +13,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(categories.router, prefix="/api")
 app.include_router(transactions.router, prefix="/api")
 app.include_router(goals.router, prefix="/api")
+app.include_router(budgets.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
 app.include_router(settings.router, prefix="/api")
 

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Presupuestos — Finanzas{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Presupuestos</h1>
+    <p class="text-sm text-gray-500 mt-1">Monto mensual por categoría de gasto</p>
+  </div>
+  <input type="month" id="budget-month" name="month" value="{{ month }}"
+         hx-get="/partials/budgets"
+         hx-target="#budget-list"
+         hx-swap="innerHTML"
+         hx-trigger="change"
+         class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+</div>
+
+<div id="budget-list" class="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
+  {% include "partials/budget_rows.html" %}
+</div>
+{% endblock %}

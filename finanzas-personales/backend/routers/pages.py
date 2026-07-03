@@ -11,6 +11,7 @@ from models.category import CategoryCreate
 from models.goal import ContributionCreate, GoalCreate
 from models.settings import SettingsUpdate
 from models.transaction import TransactionCreate
+from services import budgets as budget_svc
 from services import categories as cat_svc
 from services import goals as goal_svc
 from services import reports as rep_svc
@@ -37,16 +38,21 @@ def _current_month() -> str:
 
 # ─── Full pages ───────────────────────────────────────────────────────────────
 
+def _dashboard_ctx(request: Request) -> dict:
+    month = _current_month()
+    return _ctx(
+        request,
+        summary=rep_svc.monthly_summary(month),
+        recent=tx_svc.list_transactions(month=month, limit=5)["data"],
+        goals=rep_svc.goals_progress(),
+        budget=budget_svc.budget_summary(month),
+        month=month,
+    )
+
+
 @router.get("/", response_class=HTMLResponse)
 def dashboard(request: Request):
-    month = _current_month()
-    summary = rep_svc.monthly_summary(month)
-    recent = tx_svc.list_transactions(month=month, limit=5)["data"]
-    goals = rep_svc.goals_progress()
-    return templates.TemplateResponse(
-        "dashboard.html",
-        _ctx(request, summary=summary, recent=recent, goals=goals, month=month),
-    )
+    return templates.TemplateResponse("dashboard.html", _dashboard_ctx(request))
 
 
 @router.get("/transactions", response_class=HTMLResponse)
@@ -70,6 +76,15 @@ def categories_page(request: Request):
 def goals_page(request: Request):
     goals = goal_svc.list_goals()
     return templates.TemplateResponse("goals.html", _ctx(request, goals=goals))
+
+
+@router.get("/budgets", response_class=HTMLResponse)
+def budgets_page(request: Request, month: str | None = None):
+    month = month or _current_month()
+    items = budget_svc.list_budget_status(month)
+    return templates.TemplateResponse(
+        "budgets.html", _ctx(request, budget_items=items, month=month)
+    )
 
 
 @router.get("/reports", response_class=HTMLResponse)
@@ -101,13 +116,49 @@ def settings_page(request: Request):
 
 # ─── HTMX partials ───────────────────────────────────────────────────────────
 
-@router.get("/partials/dashboard-recent", response_class=HTMLResponse)
-def partial_dashboard_recent(request: Request):
-    month = _current_month()
-    recent = tx_svc.list_transactions(month=month, limit=5)["data"]
-    summary = rep_svc.monthly_summary(month)
+@router.get("/partials/dashboard", response_class=HTMLResponse)
+def partial_dashboard(request: Request):
     return templates.TemplateResponse(
-        "partials/dashboard_recent.html", _ctx(request, recent=recent, summary=summary)
+        "partials/dashboard_content.html", _dashboard_ctx(request)
+    )
+
+
+@router.get("/partials/budgets", response_class=HTMLResponse)
+def partial_budget_list(request: Request, month: str | None = None):
+    month = month or _current_month()
+    items = budget_svc.list_budget_status(month)
+    return templates.TemplateResponse(
+        "partials/budget_rows.html", _ctx(request, budget_items=items, month=month)
+    )
+
+
+@router.put("/partials/budgets/{category_id}", response_class=HTMLResponse)
+async def partial_upsert_budget(
+    request: Request,
+    category_id: str,
+    amount: float = Form(...),
+    month: str = Form(None),
+):
+    month = month or _current_month()
+    if amount <= 0:
+        return HTMLResponse("El monto debe ser mayor a 0", status_code=400)
+    try:
+        budget_svc.upsert_budget(category_id, amount)
+    except (LookupError, ValueError) as e:
+        return HTMLResponse(str(e), status_code=400)
+    item = budget_svc.get_budget_status(category_id, month)
+    return templates.TemplateResponse(
+        "partials/budget_row.html", _ctx(request, item=item, month=month)
+    )
+
+
+@router.delete("/partials/budgets/{category_id}", response_class=HTMLResponse)
+def partial_delete_budget(request: Request, category_id: str, month: str | None = None):
+    month = month or _current_month()
+    budget_svc.delete_budget(category_id)
+    item = budget_svc.get_budget_status(category_id, month)
+    return templates.TemplateResponse(
+        "partials/budget_row.html", _ctx(request, item=item, month=month)
     )
 
 

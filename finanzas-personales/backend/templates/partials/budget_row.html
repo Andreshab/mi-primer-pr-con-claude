@@ -1,0 +1,54 @@
+<form id="budget-row-{{ item.category_id }}"
+      hx-put="/partials/budgets/{{ item.category_id }}"
+      hx-include="#budget-month"
+      hx-target="this"
+      hx-swap="outerHTML"
+      class="px-5 py-4 grid grid-cols-[2.5rem_1fr_9rem_auto] items-center gap-4">
+
+  <span class="text-2xl">{{ item.category_icon }}</span>
+
+  <div class="min-w-0">
+    <p class="text-sm font-medium text-gray-800">{{ item.category_name }}</p>
+    {% if item.budget_amount is not none %}
+      {% set pct = item.pct %}
+      {% set bar = 'bg-green-500' if pct < 80 else 'bg-amber-500' if pct <= 100 else 'bg-rose-500' %}
+      <div class="flex justify-between text-xs mt-1 mb-1">
+        <span class="text-gray-500">
+          {{ settings.currency_symbol }}{{ "{:,.2f}".format(item.spent) }}
+          de {{ settings.currency_symbol }}{{ "{:,.2f}".format(item.budget_amount) }}
+        </span>
+        <span class="{{ 'text-rose-600 font-semibold' if pct > 100 else 'text-gray-400' }}">{{ pct }}%</span>
+      </div>
+      <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+        <div class="h-full rounded-full transition-all {{ bar }}"
+             style="width: {{ [pct | float, 100] | min }}%"></div>
+      </div>
+    {% else %}
+      <p class="text-xs text-gray-400 mt-0.5">
+        Sin presupuesto — gastado este mes: {{ settings.currency_symbol }}{{ "{:,.2f}".format(item.spent) }}
+      </p>
+    {% endif %}
+  </div>
+
+  <input type="number" name="amount" step="0.01" min="0.01" required
+         value="{{ item.budget_amount if item.budget_amount is not none else '' }}"
+         placeholder="Monto mensual"
+         class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-right focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+
+  <div class="flex items-center gap-2">
+    <button type="submit"
+            class="bg-indigo-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-indigo-700">
+      Guardar
+    </button>
+    {% if item.budget_amount is not none %}
+    <button type="button"
+            hx-delete="/partials/budgets/{{ item.category_id }}"
+            hx-include="#budget-month"
+            hx-target="#budget-row-{{ item.category_id }}"
+            hx-swap="outerHTML"
+            class="text-xs text-gray-400 hover:text-rose-600 px-2 py-1.5">
+      Quitar
+    </button>
+    {% endif %}
+  </div>
+</form>
