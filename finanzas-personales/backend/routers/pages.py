@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from models.category import CategoryCreate
-from models.goal import ContributionCreate, GoalCreate
+from models.goal import ContributionCreate, GoalCreate, GoalUpdate
 from models.settings import SettingsUpdate
 from models.transaction import TransactionCreate
 from services import budgets as budget_svc
@@ -243,6 +243,45 @@ async def partial_create_goal(
     )
     goal = goal_svc.create_goal(payload)
     return templates.TemplateResponse("partials/goal_card.html", _ctx(request, goal=goal))
+
+
+@router.put("/partials/goals/{goal_id}", response_class=HTMLResponse)
+async def partial_update_goal(
+    request: Request,
+    goal_id: str,
+    name: str = Form(...),
+    target_amount: float = Form(...),
+    goal_date: str = Form(""),
+):
+    payload = GoalUpdate(
+        name=name,
+        target_amount=Decimal(str(target_amount)),
+        deadline=dt.date.fromisoformat(goal_date) if goal_date else None,
+    )
+    goal = goal_svc.update_goal(goal_id, payload)
+    if not goal:
+        return HTMLResponse("Meta no encontrada", status_code=404)
+    return templates.TemplateResponse("partials/goal_card.html", _ctx(request, goal=goal))
+
+
+@router.post("/partials/goals/{goal_id}/status", response_class=HTMLResponse)
+async def partial_goal_status(
+    request: Request,
+    goal_id: str,
+    status: str = Form(...),
+):
+    if status not in ("active", "cancelled"):
+        return HTMLResponse("Estado inválido", status_code=400)
+    goal = goal_svc.update_goal(goal_id, GoalUpdate(status=status))
+    if not goal:
+        return HTMLResponse("Meta no encontrada", status_code=404)
+    return templates.TemplateResponse("partials/goal_card.html", _ctx(request, goal=goal))
+
+
+@router.delete("/partials/goals/{goal_id}", response_class=HTMLResponse)
+def partial_delete_goal(goal_id: str):
+    goal_svc.delete_goal(goal_id)
+    return HTMLResponse("")
 
 
 @router.post("/partials/goals/{goal_id}/contribute", response_class=HTMLResponse)

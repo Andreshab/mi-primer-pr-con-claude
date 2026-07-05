@@ -27,6 +27,19 @@ def create_goal(payload: GoalCreate) -> dict:
     return get_goal(goal_id)
 
 
+def _recalc_status(goal_id: str) -> None:
+    """Business rule: reaching the target completes the goal; raising the
+    target of a completed goal reopens it. Cancelled goals are untouched."""
+    db = get_client()
+    goal = get_goal(goal_id)
+    if not goal or goal["status"] == "cancelled":
+        return
+    reached = float(goal["current_amount"]) >= float(goal["target_amount"])
+    new_status = "completed" if reached else "active"
+    if new_status != goal["status"]:
+        db.table("savings_goals").update({"status": new_status}).eq("id", goal_id).execute()
+
+
 def update_goal(goal_id: str, payload: GoalUpdate) -> dict | None:
     db = get_client()
     data = {k: v for k, v in payload.model_dump().items() if v is not None}
@@ -36,8 +49,18 @@ def update_goal(goal_id: str, payload: GoalUpdate) -> dict | None:
         data["deadline"] = data["deadline"].isoformat()
     if not data:
         return get_goal(goal_id)
-    db.table("savings_goals").update(data).eq("id", goal_id).execute()
+    result = db.table("savings_goals").update(data).eq("id", goal_id).execute()
+    if not result.data:
+        return None
+    _recalc_status(goal_id)
     return get_goal(goal_id)
+
+
+def delete_goal(goal_id: str) -> bool:
+    """Deletes the goal; its contributions go with it (FK ON DELETE CASCADE)."""
+    db = get_client()
+    result = db.table("savings_goals").delete().eq("id", goal_id).execute()
+    return bool(result.data)
 
 
 def add_contribution(goal_id: str, payload: ContributionCreate) -> dict:

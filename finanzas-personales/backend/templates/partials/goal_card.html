@@ -55,4 +55,59 @@
     </form>
   </details>
   {% endif %}
+
+  <!-- Edit form (active and completed — raising the target of a completed goal reopens it) -->
+  {% if goal.status in ('active', 'completed') %}
+  <details class="mt-2">
+    <summary class="text-xs text-gray-500 font-medium cursor-pointer hover:text-gray-700 select-none">
+      ✏️ Editar meta
+    </summary>
+    <form hx-put="/partials/goals/{{ goal.id }}"
+          hx-target="#goal-{{ goal.id }}"
+          hx-swap="outerHTML"
+          class="grid grid-cols-3 gap-2 mt-3">
+      <input type="text" name="name" required value="{{ goal.name }}"
+             placeholder="Nombre"
+             class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      <input type="number" name="target_amount" step="0.01" min="1" required
+             value="{{ goal.target_amount | float }}"
+             placeholder="Monto objetivo"
+             class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      <input type="date" name="goal_date" value="{{ goal.deadline or '' }}"
+             class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      <button type="submit"
+              class="col-span-3 bg-indigo-600 text-white text-sm font-medium py-1.5 rounded-lg hover:bg-indigo-700">
+        Guardar cambios
+      </button>
+    </form>
+  </details>
+  {% endif %}
+
+  <!-- Lifecycle actions -->
+  <div class="flex justify-end gap-3 mt-3">
+    {% if goal.status == 'active' %}
+    <button hx-post="/partials/goals/{{ goal.id }}/status"
+            hx-vals='{"status": "cancelled"}'
+            hx-target="#goal-{{ goal.id }}"
+            hx-swap="outerHTML"
+            class="text-xs text-gray-400 hover:text-rose-600">
+      Cancelar meta
+    </button>
+    {% elif goal.status == 'cancelled' %}
+    <button hx-post="/partials/goals/{{ goal.id }}/status"
+            hx-vals='{"status": "active"}'
+            hx-target="#goal-{{ goal.id }}"
+            hx-swap="outerHTML"
+            class="text-xs text-indigo-600 font-medium hover:text-indigo-800">
+      Reactivar
+    </button>
+    <button hx-delete="/partials/goals/{{ goal.id }}"
+            hx-confirm="¿Eliminar esta meta y todos sus aportes? Esta acción no se puede deshacer."
+            hx-target="#goal-{{ goal.id }}"
+            hx-swap="outerHTML"
+            class="text-xs text-rose-600 font-medium hover:text-rose-800">
+      Eliminar
+    </button>
+    {% endif %}
+  </div>
 </div>

@@ -25,6 +25,12 @@ def update_goal(goal_id: str, payload: GoalUpdate):
     return result
 
 
+@router.delete("/{goal_id}", status_code=204)
+def delete_goal(goal_id: str):
+    if not svc.delete_goal(goal_id):
+        raise HTTPException(status_code=404, detail="Goal not found")
+
+
 @router.post("/{goal_id}/contribute", status_code=201)
 def add_contribution(goal_id: str, payload: ContributionCreate):
     goal = svc.get_goal(goal_id)
