@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -25,4 +27,8 @@ app.include_router(pages.router)
 def health():
     db = get_client()
     result = db.table("settings").select("key, value").execute()
-    return {"status": "ok", "settings": result.data}
+    return {
+        "status": "ok",
+        "commit": os.getenv("RENDER_GIT_COMMIT", "local"),
+        "settings": result.data,
+    }
